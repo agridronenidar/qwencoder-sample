@@ -1,0 +1,181 @@
+{
+  "personal_info": {
+    "full_name": "Your Full Name",
+    "email": "your.email@example.com",
+    "phone": "+1-XXX-XXX-XXXX",
+    "location": "City, State",
+    "linkedin_url": "https://linkedin.com/in/yourprofile",
+    "github_url": "https://github.com/yourusername",
+    "portfolio_url": "https://yourportfolio.com"
+  },
+  "professional_summary": "Embedded Systems Engineer with expertise in aerospace applications, flight software development, and AI integration. Experienced in CubeSat projects, quantum key distribution systems, and real-time embedded programming.",
+  "skills": {
+    "programming_languages": [
+      "Python",
+      "C/C++",
+      "Rust",
+      "Verilog",
+      "MATLAB"
+    ],
+    "embedded_systems": [
+      "RTOS",
+      "ARM Cortex-M",
+      "ESP32",
+      "Raspberry Pi",
+      "FPGA",
+      "I2C/SPI/UART",
+      "CAN Bus"
+    ],
+    "aerospace": [
+      "CubeSat Development",
+      "Flight Software",
+      "Avionics",
+      "ADCS Systems",
+      "Telemetry Systems"
+    ],
+    "ai_ml": [
+      "TensorFlow",
+      "PyTorch",
+      "OpenCV",
+      "Edge AI",
+      "Model Optimization"
+    ],
+    "tools": [
+      "Git",
+      "Docker",
+      "KiCad",
+      "Altium Designer",
+      "Oscilloscopes",
+      "Logic Analyzers"
+    ]
+  },
+  "projects": [
+    {
+      "name": "QKDpy - Quantum Key Distribution System",
+      "description": "Developed Python-based quantum key distribution protocol implementation for secure satellite communications. Implemented BB84 protocol with error correction and privacy amplification.",
+      "technologies": ["Python", "NumPy", "Quantum Computing", "Cryptography"],
+      "role": "Lead Developer",
+      "duration": "6 months",
+      "key_achievements": [
+        "Achieved 99.2% key generation rate under simulated atmospheric conditions",
+        "Reduced error correction overhead by 35% using LDPC codes",
+        "Published findings at IEEE Aerospace Conference"
+      ]
+    },
+    {
+      "name": "CubeSat Flight Computer",
+      "description": "Designed and implemented flight computer software for 3U CubeSat mission. Developed fault-tolerant system with watchdog timers and redundant communication paths.",
+      "technologies": ["C", "FreeRTOS", "ARM Cortex-M4", "I2C", "SPI"],
+      "role": "Embedded Software Engineer",
+      "duration": "12 months",
+      "key_achievements": [
+        "Successfully completed thermal vacuum testing at -40°C to +85°C",
+        "Implemented autonomous fault detection and recovery system",
+        "Achieved 99.97% uptime during 6-month orbital simulation"
+      ]
+    },
+    {
+      "name": "AI-Powered ADCS System",
+      "description": "Developed machine learning model for Attitude Determination and Control System using sensor fusion from gyros, magnetometers, and sun sensors.",
+      "technologies": ["Python", "TensorFlow Lite", "Sensor Fusion", "Kalman Filters"],
+      "role": "ML Engineer",
+      "duration": "8 months",
+      "key_achievements": [
+        "Improved pointing accuracy to 0.1 degrees using neural network enhancement",
+        "Reduced computational load by 60% through model quantization",
+        "Deployed on resource-constrained embedded platform (200MHz Cortex-M7)"
+      ]
+    },
+    {
+      "name": "Autonomous Drone Navigation System",
+      "description": "Built vision-based navigation system for GPS-denied environments using SLAM and obstacle avoidance algorithms.",
+      "technologies": ["C++", "ROS2", "OpenCV", "LiDAR", "Depth Cameras"],
+      "role": "Robotics Engineer",
+      "duration": "10 months",
+      "key_achievements": [
+        "Achieved real-time mapping at 30fps on embedded Jetson Nano",
+        "Implemented dynamic obstacle avoidance with <100ms reaction time",
+        "Successfully navigated complex indoor environments autonomously"
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "company": "Aerospace Company Name",
+      "position": "Senior Embedded Engineer",
+      "duration": "2022 - Present",
+      "responsibilities": [
+        "Lead development of flight software for next-generation satellite constellation",
+        "Architected modular software framework reducing development time by 40%",
+        "Mentored team of 4 junior engineers on embedded best practices",
+        "Collaborated with hardware team on PCB design and component selection"
+      ]
+    },
+    {
+      "company": "Previous Company Name",
+      "position": "Embedded Systems Engineer",
+      "duration": "2020 - 2022",
+      "responsibilities": [
+        "Developed embedded control systems for industrial automation",
+        "Implemented safety-critical software meeting DO-178C Level B standards",
+        "Optimized real-time control loops achieving 1kHz update rates",
+        "Integrated wireless communication protocols (LoRa, BLE, WiFi)"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Master of Science in Aerospace Engineering",
+      "institution": "University Name",
+      "graduation_year": "2020",
+      "relevant_coursework": ["Flight Dynamics", "Control Systems", "Embedded Systems", "Signal Processing"]
+    },
+    {
+      "degree": "Bachelor of Science in Electrical Engineering",
+      "institution": "University Name",
+      "graduation_year": "2018",
+      "relevant_coursework": ["Digital Systems", "Microprocessors", "Control Theory", "Communications"]
+    }
+  ],
+  "certifications": [
+    "Certified Embedded Systems Professional (CESP)",
+    "AWS Certified Developer - Associate",
+    "NASA CubeSat Launch Initiative Participant"
+  ],
+  "publications": [
+    {
+      "title": "Efficient Quantum Key Distribution for Satellite Communications",
+      "venue": "IEEE Aerospace Conference",
+      "year": "2023"
+    },
+    {
+      "title": "Machine Learning Enhanced ADCS for Small Satellites",
+      "venue": "Journal of Spacecraft and Rockets",
+      "year": "2022"
+    }
+  ],
+  "preferences": {
+    "job_types": ["Full-time", "Contract"],
+    "remote_preference": "Hybrid or Remote",
+    "target_roles": [
+      "Embedded Systems Engineer",
+      "Flight Software Engineer",
+      "Avionics Engineer",
+      "AI/ML Engineer - Edge Computing",
+      "Robotics Software Engineer"
+    ],
+    "target_industries": [
+      "Aerospace",
+      "Defense",
+      "Space Technology",
+      "Autonomous Systems",
+      "IoT"
+    ],
+    "locations": ["United States", "Remote"],
+    "salary_range": {
+      "min": 120000,
+      "max": 180000,
+      "currency": "USD"
+    }
+  }
+}

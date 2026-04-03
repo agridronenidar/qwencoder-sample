@@ -1,0 +1,124 @@
+{
+  "columns": [
+    {
+      "name": "ID",
+      "type": "string",
+      "description": "Unique identifier for each job application"
+    },
+    {
+      "name": "Timestamp",
+      "type": "datetime",
+      "description": "When the job was added to the system"
+    },
+    {
+      "name": "Job_Title",
+      "type": "string",
+      "description": "Position title"
+    },
+    {
+      "name": "Company",
+      "type": "string",
+      "description": "Company name"
+    },
+    {
+      "name": "Location",
+      "type": "string",
+      "description": "Job location (city, state, remote)"
+    },
+    {
+      "name": "Source",
+      "type": "string",
+      "description": "Where the job was found (Adzuna, Jooble, YC, RSS)"
+    },
+    {
+      "name": "Apply_URL",
+      "type": "string",
+      "description": "Direct link to application page"
+    },
+    {
+      "name": "Application_Type",
+      "type": "string",
+      "description": "Type: Web Form, Direct Email, LinkedIn Easy Apply"
+    },
+    {
+      "name": "ATS_Platform",
+      "type": "string",
+      "description": "ATS if detected: Lever, Greenhouse, Workday, Other"
+    },
+    {
+      "name": "Contact_Email",
+      "type": "string",
+      "description": "Email address for direct applications"
+    },
+    {
+      "name": "Job_Description",
+      "type": "text",
+      "description": "Full job description text"
+    },
+    {
+      "name": "Required_Skills",
+      "type": "text",
+      "description": "Key skills extracted from job posting"
+    },
+    {
+      "name": "Match_Score",
+      "type": "number",
+      "description": "AI-calculated match score (0-100) based on personal data"
+    },
+    {
+      "name": "Status",
+      "type": "string",
+      "description": "Pending, In Progress, Applied, Manual Review Required, Failed"
+    },
+    {
+      "name": "LLM_Model_Used",
+      "type": "string",
+      "description": "Which model processed this application (Groq, OpenRouter, HuggingFace)"
+    },
+    {
+      "name": "Cover_Letter_Generated",
+      "type": "boolean",
+      "description": "Whether a cover letter was generated"
+    },
+    {
+      "name": "Customizations",
+      "type": "text",
+      "description": "Notes on how the application was customized"
+    },
+    {
+      "name": "Error_Log",
+      "type": "text",
+      "description": "Any errors encountered during application"
+    },
+    {
+      "name": "Date_Processed",
+      "type": "datetime",
+      "description": "When the application was submitted"
+    },
+    {
+      "name": "Retry_Count",
+      "type": "integer",
+      "description": "Number of retry attempts"
+    }
+  ],
+  "status_values": [
+    "Pending",
+    "In Progress", 
+    "Applied",
+    "Manual Review Required",
+    "Failed"
+  ],
+  "application_types": [
+    "Web Form",
+    "Direct Email",
+    "LinkedIn Easy Apply"
+  ],
+  "ats_platforms": [
+    "Lever",
+    "Greenhouse", 
+    "Workday",
+    "iCIMS",
+    "Taleo",
+    "Other"
+  ]
+}

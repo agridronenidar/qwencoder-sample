@@ -1,0 +1,27 @@
+Subject: Application for {{job_title}} Position - {{full_name}}
+
+Dear Hiring Team,
+
+I hope this email finds you well. I am writing to apply for the {{job_title}} position at {{company}} that I discovered through {{source}}.
+
+{{custom_intro}}
+
+Why I'm a strong fit for this role:
+
+{{bullet_points}}
+
+Key Projects:
+{{project_highlights}}
+
+My technical skills directly align with your requirements:
+{{skills_match}}
+
+I have attached my resume for your review. I would welcome the opportunity to discuss how my experience in {{key_strength}} can contribute to {{company}}'s mission of {{company_mission}}.
+
+Thank you for your time and consideration. I look forward to hearing from you.
+
+Best regards,
+{{full_name}}
+{{phone}}
+{{linkedin_url}}
+{{github_url}}

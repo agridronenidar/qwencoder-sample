@@ -1,0 +1,154 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: autoapply-postgres
+    environment:
+      POSTGRES_USER: autoapply
+      POSTGRES_PASSWORD: securepassword123
+      POSTGRES_DB: autoapply_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoapply"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autoapply-network
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: autoapply-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autoapply-network
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autoapply-backend
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://autoapply:securepassword123@postgres:5432/autoapply_db
+      REDIS_URL: redis://redis:6379/0
+      FRONTEND_URL: http://localhost:3000
+    volumes:
+      - ./backend:/app
+      - ./resumes:/app/resumes
+      - ./context:/app/context
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    networks:
+      - autoapply-network
+
+  # Celery Worker (Background Tasks)
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autoapply-celery
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://autoapply:securepassword123@postgres:5432/autoapply_db
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - ./resumes:/app/resumes
+      - ./context:/app/context
+    depends_on:
+      - postgres
+      - redis
+      - browserless
+    command: celery -A app.celery worker --loglevel=info --concurrency=4
+    networks:
+      - autoapply-network
+
+  # Celery Beat (Scheduled Tasks)
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autoapply-beat
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://autoapply:securepassword123@postgres:5432/autoapply_db
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+      - redis
+    command: celery -A app.celery beat --loglevel=info
+    networks:
+      - autoapply-network
+
+  # Browserless (Headless Browser Automation)
+  browserless:
+    image: browserless/chrome:latest
+    container_name: autoapply-browserless
+    ports:
+      - "3000:3000"
+    environment:
+      CONNECTION_TIMEOUT: 600000
+      MAX_CONCURRENT_SESSIONS: 5
+      PREBOOT_CHROME: true
+      DEFAULT_LAUNCH_ARGS: '["--no-sandbox","--disable-setuid-sandbox"]'
+    networks:
+      - autoapply-network
+
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: autoapply-frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_WS_URL: ws://localhost:8000/ws
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - autoapply-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  autoapply-network:
+    driver: bridge
