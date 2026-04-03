@@ -1,0 +1,141 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300],
+      "notes": "Runs every hour to collect new job postings"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.adzuna.com/v1/api/jobs/us/search/1",
+        "headers": {
+          "App-Id": "{{ $credentials.adzuna.appId }}",
+          "App-Key": "{{ $credentials.adzuna.appKey }}"
+        },
+        "queryParameters": {
+          "app_id": "{{ $credentials.adzuna.appId }}",
+          "app_key": "{{ $credentials.adzuna.appKey }}",
+          "what": "Embedded Engineer OR Flight Software OR Avionics Engineer",
+          "where": "United States",
+          "results_per_page": 50,
+          "content-type": "application/json"
+        }
+      },
+      "id": "adzuna-api",
+      "name": "Adzuna API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.jooble.org/jobs",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "source": "jooble",
+          "keywords": "Embedded Systems Engineer, Flight Software, Avionics",
+          "location": "United States"
+        }
+      },
+      "id": "jooble-api",
+      "name": "Jooble API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 500],
+      "notes": "Parallel API call for additional job sources"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter jobs with direct apply links\nconst jobs = [];\n\n// Process Adzuna results\nif ($input.item.json.results) {\n  $input.item.json.results.forEach(job => {\n    const redirectUrl = job.redirect_url || '';\n    const isDirectApply = redirectUrl.includes('lever.co') || \n                          redirectUrl.includes('greenhouse.io') || \n                          redirectUrl.includes('workday') ||\n                          redirectUrl.includes('getwork.com');\n    \n    if (isDirectApply) {\n      jobs.push({\n        job_title: job.title,\n        company: job.company.display_name,\n        location: job.location.display_name,\n        source: 'Adzuna',\n        apply_url: redirectUrl,\n        application_type: 'Web Form',\n        ats_platform: detectATS(redirectUrl),\n        job_description: job.description,\n        timestamp: new Date().toISOString()\n      });\n    }\n  });\n}\n\nfunction detectATS(url) {\n  if (url.includes('lever.co')) return 'Lever';\n  if (url.includes('greenhouse.io')) return 'Greenhouse';\n  if (url.includes('workday')) return 'Workday';\n  return 'Other';\n}\n\nreturn jobs.map(job => ({ json: job }));"
+      },
+      "id": "filter-direct-apply",
+      "name": "Filter Direct Apply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate match score based on skills alignment\nconst personalData = $input.item.json.personal_data;\nconst jobDesc = $input.item.json.job_description.toLowerCase();\n\nconst keySkills = [\n  'embedded', 'flight software', 'aerospace', 'python', 'c/c++',\n  'rtos', 'arm', 'cubeSat', 'avionics', 'machine learning'\n];\n\nlet matchCount = 0;\nkeySkills.forEach(skill => {\n  if (jobDesc.includes(skill.toLowerCase())) {\n    matchCount++;\n  }\n});\n\nconst matchScore = Math.round((matchCount / keySkills.length) * 100);\n\nreturn {\n  json: {\n    ...$input.item.json,\n    match_score: matchScore,\n    required_skills: extractSkills(jobDesc)\n  }\n};\n\nfunction extractSkills(desc) {\n  // Simple skill extraction - can be enhanced with LLM\n  const skills = [];\n  const skillPatterns = ['Python', 'C++', 'RTOS', 'Linux', 'Git', 'Docker'];\n  skillPatterns.forEach(skill => {\n    if (desc.includes(skill.toLowerCase())) {\n      skills.push(skill);\n    }\n  });\n  return skills.join(', ');\n}"
+      },
+      "id": "calculate-match-score",
+      "name": "Calculate Match Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "{{ $credentials.googleSheets.sheetId }}",
+        "range": "Jobs!A:P",
+        "options": {}
+      },
+      "id": "save-to-sheets",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [1050, 300],
+      "notes": "Saves filtered jobs to Pending status in spreadsheet"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Adzuna API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adzuna API": {
+      "main": [
+        [
+          {
+            "node": "Filter Direct Apply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Direct Apply": {
+      "main": [
+        [
+          {
+            "node": "Calculate Match Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Match Score": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "name": "Module A - Job Scout",
+  "tags": ["job-collection", "scout", "automation"]
+}

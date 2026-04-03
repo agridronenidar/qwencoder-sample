@@ -1,0 +1,81 @@
+# Docker Compose for n8n + Browserless Setup
+
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      # Webhook URL for external triggers
+      - WEBHOOK_URL=http://localhost:5678/
+      # Encryption key for credentials (CHANGE THIS!)
+      - N8N_ENCRYPTION_KEY=your-secret-encryption-key-change-me
+      # Timezone
+      - GENERIC_TIMEZONE=America/New_York
+      # Enable community nodes
+      - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./resumes:/workspace/resumes:ro
+      - ./context:/workspace/context:ro
+    networks:
+      - automation-network
+
+  browserless:
+    image: browserless/chrome:latest
+    container_name: browserless
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Connection timeout in milliseconds
+      - CONNECTION_TIMEOUT=-1
+      # Max concurrent sessions
+      - MAX_CONCURRENT_SESSIONS=5
+      # Enable function API
+      - ENABLE_FUNCTION_API=true
+      # Timeout for functions
+      - FUNCTION_TIMEOUT=60000
+      # Debug mode
+      - DEBUG=browserless*
+      # Allow file uploads
+      - ALLOW_FILE_ACCESS=true
+    volumes:
+      - /tmp/browserless-data:/tmp/data
+      - ./resumes:/workspace/resumes:ro
+    networks:
+      - automation-network
+
+  # Optional: LocalStack for testing AWS services
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    restart: unless-stopped
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,ses,sqs
+      - DEBUG=1
+      - DATA_DIR=/var/lib/localstack/data
+    volumes:
+      - localstack_data:/var/lib/localstack
+    networks:
+      - automation-network
+
+volumes:
+  n8n_data:
+    driver: local
+  localstack_data:
+    driver: local
+
+networks:
+  automation-network:
+    driver: bridge

@@ -1,0 +1,345 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "read",
+        "sheetId": "{{ $credentials.googleSheets.sheetId }}",
+        "range": "Jobs!A:P",
+        "options": {
+          "where": "Status = 'Pending'"
+        }
+      },
+      "id": "read-pending-jobs",
+      "name": "Read Pending Jobs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge-personal-data",
+      "name": "Merge Personal Data",
+      "type": "n8n-nodes-base.combine",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "notes": "Combines job data with personal_data.json for RAG context"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-70b-versatile",
+        "messages": {
+          "system": "You are a job application assistant. Use ONLY the provided personal data to generate application materials. NEVER hallucinate or fabricate experience.\n\nRules:\n1. Only reference projects, skills, and experiences explicitly listed in the personal data\n2. If a required skill is not in the personal data, acknowledge the gap honestly\n3. Generate concise, tailored content that maps real experience to job requirements\n4. Keep responses factual and verifiable",
+          "user": "Generate application materials for this job:\n\nJob Title: {{ $json.job_title }}\nCompany: {{ $json.company }}\nJob Description: {{ $json.job_description }}\nRequired Skills: {{ $json.required_skills }}\n\nPersonal Data: {{ $json.personal_data }}\n\nTasks:\n1. Calculate match score (0-100) based on skills alignment\n2. Identify 2-3 most relevant projects from personal data\n3. Generate a 3-sentence intro highlighting relevant experience\n4. List specific skills that match the job requirements\n5. Note any significant skill gaps\n\nOutput JSON format:\n{\n  \"match_score\": number,\n  \"relevant_projects\": [\"project names\"],\n  \"custom_intro\": \"string\",\n  \"matching_skills\": [\"skills\"],\n  \"skill_gaps\": [\"gaps\"],\n  \"company_specific_reason\": \"string\"\n}"
+        },
+        "options": {
+          "temperature": 0.3,
+          "max_tokens": 500
+        }
+      },
+      "id": "groq-llm-primary",
+      "name": "Groq LLM (Primary)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [650, 200],
+      "notes": "Primary model - fast and free tier"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "{{ $json.success }}",
+              "operation": "equal",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-groq-success",
+      "name": "Check Groq Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-3-haiku",
+        "messages": {
+          "system": "FALLBACK MODEL: You are a job application assistant. Use ONLY the provided personal data to generate application materials. NEVER hallucinate or fabricate experience.\n\nRules:\n1. Only reference projects, skills, and experiences explicitly listed in the personal data\n2. If a required skill is not in the personal data, acknowledge the gap honestly\n3. Generate concise, tailored content that maps real experience to job requirements\n4. Keep responses factual and verifiable",
+          "user": "Generate application materials for this job:\n\nJob Title: {{ $json.job_title }}\nCompany: {{ $json.company }}\nJob Description: {{ $json.job_description }}\nRequired Skills: {{ $json.required_skills }}\n\nPersonal Data: {{ $json.personal_data }}\n\nTasks:\n1. Calculate match score (0-100) based on skills alignment\n2. Identify 2-3 most relevant projects from personal data\n3. Generate a 3-sentence intro highlighting relevant experience\n4. List specific skills that match the job requirements\n5. Note any significant skill gaps\n\nOutput JSON format:\n{\n  \"match_score\": number,\n  \"relevant_projects\": [\"project names\"],\n  \"custom_intro\": \"string\",\n  \"matching_skills\": [\"skills\"],\n  \"skill_gaps\": [\"gaps\"],\n  \"company_specific_reason\": \"string\"\n}"
+        },
+        "options": {
+          "temperature": 0.3,
+          "max_tokens": 500
+        }
+      },
+      "id": "openrouter-fallback",
+      "name": "OpenRouter (Fallback 1)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [850, 500],
+      "notes": "Fallback if Groq fails"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine application type and route accordingly\nconst applyUrl = $input.item.json.apply_url;\nconst contactEmail = $input.item.json.contact_email;\n\nlet applicationType = 'Web Form';\nlet nextNode = 'browser-automation';\n\nif (contactEmail && contactEmail.includes('@')) {\n  applicationType = 'Direct Email';\n  nextNode = 'email-application';\n} else if (applyUrl.includes('linkedin.com')) {\n  applicationType = 'LinkedIn Easy Apply';\n  nextNode = 'manual-review'; // LinkedIn requires manual handling\n}\n\nreturn {\n  json: {\n    ...$input.item.json,\n    application_type: applicationType,\n    next_step: nextNode\n  }\n};"
+      },
+      "id": "route-by-type",
+      "name": "Route by Application Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://browserless:3000/function",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "={\n  \"code\": `\n    async function({ page, data }) {\n      await page.goto(data.apply_url, { waitUntil: 'networkidle2' });\n      \n      // Get page HTML for LLM analysis\n      const html = await page.content();\n      \n      return {\n        success: true,\n        url: data.apply_url,\n        html_length: html.length,\n        title: await page.title()\n      };\n    }\n  `,\n  \"data\": {{ JSON.stringify($json) }}\n}"
+      },
+      "id": "browserless-scrape",
+      "name": "Browserless - Scrape Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 200],
+      "notes": "Navigates to job page and scrapes HTML"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-70b-versatile",
+        "messages": {
+          "system": "You are an HTML analyzer. Analyze the provided HTML and identify form field selectors for job applications.\n\nOutput ONLY valid JSON with this structure:\n{\n  \"form_fields\": [\n    {\n      \"field_type\": \"name|email|phone|resume|cover_letter|other\",\n      \"selector\": \"CSS selector or XPath\",\n      \"field_name\": \"name attribute if available\"\n    }\n  ],\n  \"submit_button_selector\": \"CSS selector for submit button\",\n  \"is_multi_page\": boolean,\n  \"notes\": \"Any special instructions\"\n}",
+          "user": "Analyze this job application page HTML and identify all form fields:\n\nPage Title: {{ $json.title }}\nURL: {{ $json.url }}\nHTML (first 5000 chars): {{ $json.html.substring(0, 5000) }}"
+        },
+        "options": {
+          "temperature": 0.1,
+          "max_tokens": 800
+        }
+      },
+      "id": "analyze-form-fields",
+      "name": "Analyze Form Fields (LLM)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://browserless:3000/function",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "={\n  \"code\": `\n    async function({ page, data, formFields }) {\n      await page.goto(data.apply_url, { waitUntil: 'networkidle2' });\n      \n      // Fill form fields using LLM-provided selectors\n      for (const field of formFields.form_fields) {\n        try {\n          const element = await page.$(field.selector);\n          if (!element) continue;\n          \n          const fieldType = field.field_type;\n          \n          if (fieldType === 'name') {\n            await element.type(data.personal_info.full_name);\n          } else if (fieldType === 'email') {\n            await element.type(data.personal_info.email);\n          } else if (fieldType === 'phone') {\n            await element.type(data.personal_info.phone);\n          } else if (fieldType === 'resume') {\n            const fileInput = await page.$(field.selector);\n            await fileInput.uploadFile('/workspace/resumes/resume.pdf');\n          } else if (fieldType === 'cover_letter') {\n            await element.type(data.cover_letter);\n          }\n        } catch (err) {\n          console.log('Field error:', field.selector, err.message);\n        }\n      }\n      \n      // Click submit button\n      const submitBtn = await page.$(formFields.submit_button_selector);\n      if (submitBtn) {\n        await Promise.all([\n          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 10000 }),\n          submitBtn.click()\n        ]);\n        \n        // Check for success message\n        const content = await page.content();\n        const success = content.toLowerCase().includes('thank you') || \n                       content.toLowerCase().includes('application submitted') ||\n                       content.toLowerCase().includes('confirmation');\n        \n        return {\n          success: success,\n          final_url: page.url(),\n          message: success ? 'Application submitted successfully' : 'Submitted but no confirmation found'\n        };\n      } else {\n        return {\n          success: false,\n          error: 'Submit button not found'\n        };\n      }\n    }\n  `,\n  \"data\": {{ JSON.stringify($json) }},\n  \"formFields\": {{ JSON.stringify($json.llm_analysis) }}\n}"
+      },
+      "id": "browserless-submit",
+      "name": "Browserless - Submit Application",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1650, 200],
+      "notes": "Fills form and submits application"
+    },
+    {
+      "parameters": {
+        "to": "{{ $json.contact_email }}",
+        "subject": "Application for {{ $json.job_title }} Position - {{ $json.personal_info.full_name }}",
+        "emailType": "html",
+        "message": "={{ $json.generated_email_body }}",
+        "attachments": "/workspace/resumes/resume.pdf"
+      },
+      "id": "send-email-application",
+      "name": "Send Email Application",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [1250, 500],
+      "notes": "Sends direct email application with resume"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "sheetId": "{{ $credentials.googleSheets.sheetId }}",
+        "range": "Jobs!A:P",
+        "columns": [
+          "Status",
+          "LLM_Model_Used",
+          "Date_Processed",
+          "Error_Log"
+        ],
+        "values": [
+          "Applied",
+          "{{ $json.model_used }}",
+          "{{ new Date().toISOString() }}",
+          ""
+        ]
+      },
+      "id": "update-status-applied",
+      "name": "Update Status: Applied",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [1850, 200]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "sheetId": "{{ $credentials.googleSheets.sheetId }}",
+        "range": "Jobs!A:P",
+        "columns": [
+          "Status",
+          "Error_Log",
+          "Retry_Count"
+        ],
+        "values": [
+          "Manual Review Required",
+          "{{ $json.error }}",
+          "{{ ($json.retry_count || 0) + 1 }}"
+        ]
+      },
+      "id": "update-status-manual",
+      "name": "Update Status: Manual Review",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [1850, 500],
+      "notes": "Flags for manual review when automation fails"
+    }
+  ],
+  "connections": {
+    "Read Pending Jobs": {
+      "main": [
+        [
+          {
+            "node": "Merge Personal Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Personal Data": {
+      "main": [
+        [
+          {
+            "node": "Groq LLM (Primary)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq LLM (Primary)": {
+      "main": [
+        [
+          {
+            "node": "Check Groq Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Groq Success": {
+      "main": [
+        [
+          {
+            "node": "OpenRouter (Fallback 1)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route by Application Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter (Fallback 1)": {
+      "main": [
+        [
+          {
+            "node": "Route by Application Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Application Type": {
+      "main": [
+        [
+          {
+            "node": "Browserless - Scrape Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Browserless - Scrape Page": {
+      "main": [
+        [
+          {
+            "node": "Analyze Form Fields (LLM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Form Fields (LLM)": {
+      "main": [
+        [
+          {
+            "node": "Browserless - Submit Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Browserless - Submit Application": {
+      "main": [
+        [
+          {
+            "node": "Update Status: Applied",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Status: Manual Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Application": {
+      "main": [
+        [
+          {
+            "node": "Update Status: Applied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "name": "Module C - Job Executor",
+  "tags": ["job-application", "executor", "automation", "rag"]
+}

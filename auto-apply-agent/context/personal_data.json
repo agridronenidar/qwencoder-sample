@@ -1,0 +1,116 @@
+{
+  "experience": {
+    "years": 5,
+    "summary": "Embedded systems engineer with expertise in aerospace applications, flight software, and AI/ML integration",
+    "roles": [
+      {
+        "title": "Senior Embedded Systems Engineer",
+        "company": "Aerospace Dynamics Inc.",
+        "duration": "2021 - Present",
+        "description": "Lead developer for CubeSat flight software using C++ and Python. Implemented autonomous navigation algorithms and real-time data processing systems.",
+        "technologies": ["C++", "Python", "RTOS", "CAN bus", "SPI", "I2C"],
+        "achievements": [
+          "Reduced power consumption by 40% through optimized sleep modes",
+          "Developed fault-tolerant architecture for critical systems",
+          "Led team of 4 engineers on QKDpy quantum communication project"
+        ]
+      },
+      {
+        "title": "Flight Software Engineer",
+        "company": "Satellite Solutions Corp",
+        "duration": "2019 - 2021",
+        "description": "Designed and implemented onboard software for LEO satellites. Worked on attitude determination and control systems (ADCS).",
+        "technologies": ["C", "Python", "MATLAB", "Simulink", "Linux"],
+        "achievements": [
+          "Successfully deployed software on 3 operational satellites",
+          "Implemented machine learning model for anomaly detection"
+        ]
+      }
+    ]
+  },
+  "skills": {
+    "programming": ["C++", "C", "Python", "Rust", "JavaScript"],
+    "embedded": ["RTOS", "FreeRTOS", "ARM Cortex-M", "ESP32", "Arduino", "Raspberry Pi"],
+    "aerospace": ["CubeSat", "Flight Software", "ADCS", "Telemetry", "Ground Systems"],
+    "ai_ml": ["TensorFlow", "PyTorch", "scikit-learn", "Computer Vision", "NLP"],
+    "tools": ["Git", "Docker", "CI/CD", "JIRA", "KiCad", "Altium Designer"],
+    "protocols": ["CAN", "SPI", "I2C", "UART", "Ethernet", "SpaceWire"]
+  },
+  "projects": [
+    {
+      "name": "QKDpy Quantum Communication",
+      "description": "Led development of quantum key distribution system for secure satellite communications. Implemented BB84 protocol in Python with hardware integration.",
+      "role": "Technical Lead",
+      "duration": "2022 - 2023",
+      "technologies": ["Python", "FPGA", "Quantum Optics", "Cryptography"],
+      "outcome": "Successful ground-to-ground demonstration over 50km"
+    },
+    {
+      "name": "Autonomous Drone Navigation",
+      "description": "Developed ML-based obstacle avoidance system for UAVs using computer vision and sensor fusion.",
+      "role": "Solo Developer",
+      "duration": "2021",
+      "technologies": ["Python", "OpenCV", "TensorFlow", "ROS", "PX4"],
+      "outcome": "Achieved 99.5% obstacle detection accuracy"
+    },
+    {
+      "name": "CubeSat Ground Station",
+      "description": "Built automated ground station for satellite communication with tracking antenna and software-defined radio.",
+      "role": "Hardware/Software Engineer",
+      "duration": "2020 - 2021",
+      "technologies": ["Python", "GNU Radio", "RTL-SDR", "Motor Control"],
+      "outcome": "Successfully communicated with 5+ amateur satellites"
+    }
+  ],
+  "education": [
+    {
+      "degree": "Master of Science",
+      "field": "Aerospace Engineering",
+      "institution": "University of Colorado Boulder",
+      "graduation_year": 2019,
+      "focus": "Autonomous Space Systems"
+    },
+    {
+      "degree": "Bachelor of Science",
+      "field": "Electrical Engineering",
+      "institution": "MIT",
+      "graduation_year": 2017,
+      "focus": "Embedded Systems"
+    }
+  ],
+  "certifications": [
+    "Certified Embedded Systems Professional (CESP)",
+    "AWS Certified Developer Associate",
+    "NASA Systems Engineering Handbook Training"
+  ],
+  "publications": [
+    {
+      "title": "Machine Learning for Anomaly Detection in Satellite Telemetry",
+      "venue": "IEEE Aerospace Conference",
+      "year": 2022
+    },
+    {
+      "title": "Efficient Quantum Key Distribution for Small Satellites",
+      "venue": "Journal of Space Communications",
+      "year": 2023
+    }
+  ],
+  "preferences": {
+    "role_types": ["Embedded Engineer", "Flight Software Engineer", "AI/ML Engineer", "Robotics Engineer"],
+    "industries": ["Aerospace", "Defense", "Space Technology", "Autonomous Systems", "Quantum Computing"],
+    "work_arrangement": ["Remote", "Hybrid", "On-site"],
+    "locations": ["California", "Colorado", "Washington", "Texas", "Remote US"],
+    "salary_range": {
+      "min": 120000,
+      "max": 200000,
+      "currency": "USD"
+    }
+  },
+  "contact": {
+    "email": "your.email@example.com",
+    "phone": "+1-XXX-XXX-XXXX",
+    "linkedin": "linkedin.com/in/yourprofile",
+    "github": "github.com/yourusername",
+    "website": "yourportfolio.com"
+  }
+}
